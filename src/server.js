@@ -22,7 +22,7 @@ server.get('/api/v1/muebles', async (req, res) => {
         res.status(200).send(JSON.stringify({payload: muebles}));
     } catch (error) {
         console.log(error.message);
-        res.status(500).send({message: "Se ha generado un error en el servidor"});
+        res.status(500).send({message: 'Se ha generado un error en el servidor'});
     } finally {
         await desconnect();
     }
@@ -36,12 +36,12 @@ server.get('/api/v1/muebles/:codigo', async (req, res) => {
         const collection = await connectToCollection('muebles');
         const mueble = await collection.findOne({ codigo: { $eq: Number(codigo) } });
 
-        if (!mueble) return res.status(400).send({message: "El código no corresponde a un mueble registrado"});
+        if (!mueble) return res.status(400).send({message: 'El código no corresponde a un mueble registrado'});
 
         res.status(200).send(JSON.stringify({payload: mueble}));
     } catch (error) {
         console.log(error.message);
-        res.status(500).send({message: "Se ha generado un error en el servidor"});
+        res.status(500).send({message: 'Se ha generado un error en el servidor'});
     } finally {
         await desconnect();
     }
@@ -52,7 +52,7 @@ server.post('/api/v1/muebles', async (req, res) => {
     const { nombre, precio, categoria } = req.body;
 
     if (!nombre || !precio || !categoria) {
-        return res.status(400).send({message: "Faltan datos relevantes"});
+        return res.status(400).send({message: 'Faltan datos relevantes'});
     }
 
     try {
@@ -61,10 +61,10 @@ server.post('/api/v1/muebles', async (req, res) => {
 
         await collection.insertOne(mueble);
 
-        res.status(201).send(JSON.stringify({message: "Registro creado", payload: mueble}));
+        res.status(201).send(JSON.stringify({message: 'Registro creado', payload: mueble}));
     } catch (error) {
         console.log(error.message);
-        res.status(500).send({message: "Se ha generado un error en el servidor"});
+        res.status(500).send({message: 'Se ha generado un error en el servidor'});
     } finally {
         await desconnect();
     }
@@ -78,21 +78,21 @@ server.put('/api/v1/muebles/:codigo', async (req, res) => {
 
 
     if (!nombre || !precio || !categoria) {
-        return res.status(400).send({message: "Faltan datos relevantes"});
+        return res.status(400).send({message: 'Faltan datos relevantes'});
     }
 
     try {
         const collection = await connectToCollection('muebles');
         const muebleActual = await collection.findOne({ codigo: { $eq: Number(codigo)}});
 
-        if (!muebleActual) return res.status(400).send({message: "El código no corresponde a un mueble registrado"});
+        if (!muebleActual) return res.status(400).send({message: 'El código no corresponde a un mueble registrado'});
 
         await collection.updateOne({ codigo: Number(codigo) }, { $set: mueble});
 
-        res.status(200).send(JSON.stringify({message: "Registro actualizado", payload: mueble}));
+        res.status(200).send(JSON.stringify({message: 'Registro actualizado', payload: mueble}));
     } catch (error) {
         console.log(error.message);
-        res.status(500).send({message: "Hubo un error en el servidor"});
+        res.status(500).send({message: 'Hubo un error en el servidor'});
     } finally {
         await desconnect();
     }
@@ -105,14 +105,14 @@ server.delete('/api/v1/muebles/:codigo', async (req, res) => {
     try {
         const collection = await connectToCollection('muebles');
         const mueble = await collection.findOne({ codigo: { $eq: Number(codigo) } });
-        if (!mueble) return res.status(400).send({message: "El código no corresponde a un mueble registrado"});
-        
+        if (!mueble) return res.status(400).send({message: 'El código no corresponde a un mueble registrado'});
+
         await collection.deleteOne({ codigo: { $eq: Number(codigo) } });
-        
-        res.status(200).send({message: "Registro eliminado"});
+
+        res.status(200).send({message: 'Registro eliminado'});
     } catch (error) {
         console.log(error.message);
-        res.status(500).send({message: "Se ha generado un error en el servidor"});
+        res.status(500).send({message: 'Se ha generado un error en el servidor'});
     } finally {
         await desconnect();
     }
