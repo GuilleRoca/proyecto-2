@@ -7,114 +7,116 @@ const server = express();
 server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
 
-// Obtener todos los muebles (filtros opcionales): Ruta GET http://127.0.0.1:3005/muebles
-server.get('/muebles', async (req, res) => {
-    const { categoria , precio_igual_mayor_que , precio_igual_menor_que } = req.query;
-    let muebles = [];    
+// Obtener todos los muebles (filtros opcionales): Ruta GET http://127.0.0.1:3005/api/v1/muebles
+server.get('/api/v1/muebles', async (req, res) => {
+    const { categoria, precio_gte, precio_lte } = req.query;
+    let muebles = [];
 
     try {
         const collection = await connectToCollection('muebles');
-        if (categoria) muebles = await collection.find({ categoria }).sort({ codigo: 1 }).toArray();
-        else if (precio_igual_mayor_que) muebles = await collection.find({ precio: { $gte: Number(precio_igual_mayor_que) } }).sort({ precio: 1 }).toArray();
-        else if (precio_igual_menor_que) muebles = await collection.find({ precio: { $lte: Number(precio_igual_menor_que) } }).sort({ precio: -1 }).toArray();
+        if (categoria) muebles = await collection.find({ categoria }).sort({ nombre: 1 }).toArray();
+        else if (precio_gte) muebles = await collection.find({ precio: { $gte: Number(precio_gte) } }).sort({ precio: 1 }).toArray();
+        else if (precio_lte) muebles = await collection.find({ precio: { $lte: Number(precio_lte) } }).sort({ precio: -1 }).toArray();
         else muebles = await collection.find().toArray();
 
-        res.status(200).send(JSON.stringify({payload: muebles}, null, '\t'));
+        res.status(200).send(JSON.stringify({payload: muebles}));
     } catch (error) {
         console.log(error.message);
-        res.status(500).send('Se ha generado un error en el servidor');
+        res.status(500).send({message: "Se ha generado un error en el servidor"});
     } finally {
         await desconnect();
     }
 });
 
-// Obtener un mueble específico por código: Ruta GET http://127.0.0.1:3005/muebles/:codigo
-server.get('/muebles/:codigo', async (req, res) => {
+// Obtener un mueble específico por código: Ruta GET http://127.0.0.1:3005/api/v1/muebles/:codigo
+server.get('/api/v1/muebles/:codigo', async (req, res) => {
     const { codigo } = req.params;
 
     try {
         const collection = await connectToCollection('muebles');
         const mueble = await collection.findOne({ codigo: { $eq: Number(codigo) } });
 
-        if (!mueble) return res.status(400).send('El código no corresponde a un mueble registrado');
+        if (!mueble) return res.status(400).send({message: "El código no corresponde a un mueble registrado"});
 
-        res.status(200).send(JSON.stringify({payload: mueble}, null, '\t'));
+        res.status(200).send(JSON.stringify({payload: mueble}));
     } catch (error) {
         console.log(error.message);
-        res.status(500).send('Se ha generado un error en el servidor');
+        res.status(500).send({message: "Se ha generado un error en el servidor"});
     } finally {
         await desconnect();
     }
 });
 
-// Crear un nuevo mueble: Ruta POST http://127.0.0.1:3005/muebles
-server.post('/muebles', async (req, res) => {
-    const { nombre , precio , categoria } = req.body;
+// Crear un nuevo mueble: Ruta POST http://127.0.0.1:3005/api/v1/muebles
+server.post('/api/v1/muebles', async (req, res) => {
+    const { nombre, precio, categoria } = req.body;
 
-    if (!nombre || !precio || !categoria ) {
-        return res.status(400).send('Faltan datos relevantes');
+    if (!nombre || !precio || !categoria) {
+        return res.status(400).send({message: "Faltan datos relevantes"});
     }
 
     try {
         const collection = await connectToCollection('muebles');
-        const mueble = { codigo: await generateCodigo(collection), nombre, precio, categoria };
+        const mueble = { codigo: await generateCodigo(collection), nombre, precio: Number(precio), categoria };
 
         await collection.insertOne(mueble);
 
-        res.status(201).send(JSON.stringify('Registro creado',{payload: mueble}, null, '\t'));
+        res.status(201).send(JSON.stringify({message: "Registro creado", payload: mueble}));
     } catch (error) {
         console.log(error.message);
-        res.status(500).send('Se ha generado un error en el servidor');
+        res.status(500).send({message: "Se ha generado un error en el servidor"});
     } finally {
         await desconnect();
     }
 });
 
-// Actualizar un mueble específico por código: Ruta PUT http://127.0.0.1:3005/muebles/codigo
-server.put('/muebles/:codigo', async (req, res) => {
+// Actualizar un mueble específico por código: Ruta PUT http://127.0.0.1:3005/api/v1/muebles/codigo
+server.put('/api/v1/muebles/:codigo', async (req, res) => {
     const { codigo } = req.params;
-    const { nombre , precio , categoria } = req.body;
-    const mueble = { nombre , precio , categoria };
+    const { nombre, precio, categoria } = req.body;
+    const mueble = { nombre, precio: Number(precio), categoria };
 
 
     if (!nombre || !precio || !categoria) {
-        return res.status(400).send('Faltan datos relevantes');
+        return res.status(400).send({message: "Faltan datos relevantes"});
     }
 
     try {
         const collection = await connectToCollection('muebles');
-        const muebleActual = await collection.findOne({ codigo: { $eq: Number(codigo) } });
+        const muebleActual = await collection.findOne({ codigo: { $eq: Number(codigo)}});
 
-        if (!muebleActual) return res.status(400).send('El código no corresponde a un mueble registrado');
+        if (!muebleActual) return res.status(400).send({message: "El código no corresponde a un mueble registrado"});
 
         await collection.updateOne({ codigo: Number(codigo) }, { $set: mueble});
 
-        res.status(200).send(JSON.stringify('Registro actualizado',{payload: mueble}, null, '\t'));
+        res.status(200).send(JSON.stringify({message: "Registro actualizado", payload: mueble}));
     } catch (error) {
         console.log(error.message);
-        res.status(500).send('Hubo un error en el servidor');
+        res.status(500).send({message: "Hubo un error en el servidor"});
     } finally {
         await desconnect();
     }
 });
 
-// Eliminar un muebles específico por código: Ruta DELETE http://127.0.0.1:3005/muebles/codigo
-server.delete('/muebles/:codigo', async (req, res) => {
+// Eliminar un muebles específico por código: Ruta DELETE http://127.0.0.1:3005/api/v1/muebles/codigo
+server.delete('/api/v1/muebles/:codigo', async (req, res) => {
     const { codigo } = req.params;
 
     try {
         const collection = await connectToCollection('muebles');
+        const mueble = await collection.findOne({ codigo: { $eq: Number(codigo) } });
+        if (!mueble) return res.status(400).send({message: "El código no corresponde a un mueble registrado"});
+        
         await collection.deleteOne({ codigo: { $eq: Number(codigo) } });
-
-        res.status(200).send('Registro eliminado');
+        
+        res.status(200).send({message: "Registro eliminado"});
     } catch (error) {
         console.log(error.message);
-        res.status(500).send('Se ha generado un error en el servidor');
+        res.status(500).send({message: "Se ha generado un error en el servidor"});
     } finally {
         await desconnect();
     }
 });
-
 
 
 // Control de rutas inexistentes

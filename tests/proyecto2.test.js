@@ -77,7 +77,7 @@ async function testGitIgnore() {
     const NODE_MODULES = data.find((item) => item.trim() === 'node_modules/');
     const ENV = data.find((item) => item.trim() === '.env');
 
-    isEqual({ subTitle: `El directorio "node_modules/" debe estar declarado`, result: NODE_MODULES === 'node_modules/' });
+    isEqual({ subTitle: `El directorio "node_modules/" debe estar declarado`, result: NODE_MODULES.trim() === 'node_modules/' });
     isEqual({ subTitle: `El archivo ".env" debe estar declarado`, result: (ENV === '.env') });
 }
 
